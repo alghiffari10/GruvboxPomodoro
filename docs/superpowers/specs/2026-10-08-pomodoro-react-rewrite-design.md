@@ -78,7 +78,7 @@ pomodoro/
     ├── hooks/
     │   └── usePomodoro.js  # single source of truth
     ├── lib/
-    │   ├── time.js         # fmt(s) → HTML string, plain(s), dueStr(t)
+    │   ├── time.js         # parts(s) → {mm, rr}, plain(s), dueStr(t)
     │   ├── storage.js      # load(), save(state) — try/catch, day-scoped books
     │   └── bell.js         # ring() — WebAudio chime
     └── components/
@@ -94,7 +94,9 @@ Data flow: `App` calls `usePomodoro()` once and passes state slices + action cal
 
 **State:** `mode`, `running`, `left` (seconds), `total` (seconds), `books`, `cycle`, `mins` (`{focus, short, long}`), `sound`, `stamp` (`null | 'RETURNED' | 'WELCOME BACK'`), `status` (derived string), `due` (derived end timestamp or `null`).
 
-**Actions:** `toggle()` (start/pause, requests Notification permission on first start), `reset()`, `skip()`, `setMode(k)`, `setMin(k, v)` (clamped per mode), `setSound(bool)`, `clearShelf()`, `dismissStamp()`.
+**Actions:** `toggle()` (start/pause, requests Notification permission on first start), `reset()`, `skip()`, `setMode(k, keepStamp = false)`, `setMin(k, v)` (clamped per mode), `setSound(bool)`, `clearShelf()`, `dismissStamp()`.
+
+The clock renders `{mm}` and `{rr}` as separate strings with the blinking colon span between them — no `dangerouslySetInnerHTML`.
 
 **Behavior notes:**
 - Interval runs at 250 ms while running; every tick recomputes `left = ceil((end - Date.now()) / 1000)` and only triggers a re-render when the value changes.
@@ -125,7 +127,7 @@ Tailwind v4, CSS-first configuration in `src/index.css`:
 
 Vitest, covering pure logic only:
 
-1. `lib/time.js` — `fmt`/`plain` padding and colon markup, `dueStr` shape.
+1. `lib/time.js` — `parts`/`plain` padding, colon markup rendered by the component, `dueStr` shape.
 2. `lib/storage.js` — save/load round-trip, books dropped when `day` differs, corrupted JSON tolerated (mocked `localStorage`).
 3. Cycle rule — pure `nextMode(mode, cycle)` helper: focus→short, focus@4→long, short/long→focus.
 
